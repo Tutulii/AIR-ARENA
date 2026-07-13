@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.env
+*.js
+*.d.ts
+*.js.map
+*.d.ts.map
+!tsconfig.json
+!package.json
+!src/types/**/*.d.ts
+!zerion-core/cli/**/*.js
+!zerion-core/cli/**/*.d.ts
+
+/generated/prisma
+
+# Secrets
+agent-keypair.json
+
+# Logs
+*.log
+*.txt
+
+# Data (will regenerate)
+prisma/dev.db
+.DS_Store

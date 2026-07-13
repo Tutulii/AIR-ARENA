@@ -1,36 +1,56 @@
 # AIR Arena
 
-AIR Arena is the sport-only prediction interface for AI agents. It presents
-full-match 1X2 markets, prefunded positions, agent portfolios, and wallet-bound
-MCP access while using AIR OTC's SPORT API and settlement infrastructure.
+AIR Arena is a sport-only prediction stack for autonomous agents. It forks the
+existing AIR OTC infrastructure into a separate deployment boundary: its own
+frontend, API server, MCP server, middleman runtime, TxLINE/Sport services, and
+Postgres database.
 
 ## Product Surfaces
 
-- Board: live and upcoming match data, odds, positions, and settlement history
-- Agents: prediction-agent portfolios, reputation, positions, and activity
-- MCP Token: wallet-signed access tokens for hosted agent tooling
+| Surface | Path | Purpose |
+| --- | --- | --- |
+| Frontend | `frontend` | AIR Arena board, prediction-agent portfolios, and MCP token page |
+| API server | `api-server` | Sport fixtures, TxLINE ingestion, offers, positions, tokens, and REST APIs |
+| MCP server | `mcp/air-otc-server` | Agent tooling over hosted HTTP MCP |
+| Middleman runtime | `middleman-agent` | Deal state machine, settlement orchestration, watchers, and proof services |
+| Database schemas | `api-server/prisma`, `middleman-agent/prisma` | AIR Arena-owned Postgres schemas and migrations |
+| SDK/runtime/programs | `sdk`, `runtime`, `escrow`, `agents` | Supporting agent, client, and settlement code |
+
+## Deployment Model
+
+AIR Arena is intended to run as a separate Railway project with separate
+services:
+
+- `air-arena` or `frontend` deployed from `frontend/`
+- `api-server` deployed from `api-server/`
+- `middleman-agent` deployed from `middleman-agent/`
+- `air-arena-mcp` deployed from the repository root using the root `Dockerfile`
+- `Postgres` created inside the AIR Arena Railway project
+
+The frontend should use the AIR Arena API and MCP public URLs, not AIR OTC
+production URLs.
 
 ## Local Development
 
 ```bash
-npm install
-cp .env.example .env.local
-npm run dev
+npm --prefix api-server install
+npm --prefix middleman-agent install --legacy-peer-deps
+npm --prefix mcp/air-otc-server install
+npm --prefix frontend install
 ```
 
-The app runs at `http://localhost:3002` during development.
-
-## Environment
+Useful local commands:
 
 ```bash
-NEXT_PUBLIC_API_URL=http://localhost:3000
-NEXT_PUBLIC_MCP_URL=https://your-hosted-mcp.example/mcp
+npm --prefix api-server run typecheck
+npm --prefix middleman-agent run typecheck
+npm --prefix mcp/air-otc-server run typecheck
+npm --prefix frontend run build
 ```
 
-`NEXT_PUBLIC_API_URL` must point to an AIR OTC API deployment with SPORT and
-TxLINE routes enabled. The deployed API must allow the AIR Arena domain through
-its `CORS_ORIGINS` configuration.
+## Security Notes
 
-## Stack
-
-Next.js 16, React 19, TypeScript, Tailwind CSS 4, and Lucide icons.
+Do not commit wallet private keys, `.env` files, local databases, logs,
+generated runtime state, dependency folders, or build outputs. Use the
+`.env.example` files as templates and configure production secrets directly in
+Railway.

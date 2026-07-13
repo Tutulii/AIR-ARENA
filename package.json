@@ -1,34 +1,22 @@
 {
-  "name": "air-arena",
-  "version": "0.1.0",
-  "private": true,
   "scripts": {
-    "dev": "next dev --webpack -p 3002",
-    "build": "next build --webpack",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "engines": {
-    "node": ">=20.9.0"
+    "api:dev": "npm --prefix api-server run dev",
+    "middleman:dev": "npm --prefix middleman-agent run dev",
+    "middleman:demo": "ENABLE_COGNITIVE_LOOP=false ENABLE_SOCIAL_VOICE=false TREASURY_AUTO_FUND_ENABLED=false CIRCUIT_BREAKER_COUNT_SLOW_RESPONSES=false MAGICBLOCK_SESSION_TIMEOUT_MS=900000 AIROTC_DEMO_SKIP_STARTUP_RECOVERY=true ENABLE_TORQUE_EVENTS=true npm --prefix middleman-agent run dev",
+    "demo:ports": "sh -c 'for p in 3000 8080 8081; do echo PORT $p; lsof -nP -iTCP:$p -sTCP:LISTEN || true; done'",
+    "demo:stop": "sh -c 'pkill -f \"agents/elizaos-agent.*proof/fullPipelineProof.ts\" 2>/dev/null || true; pkill -f \"agents/elizaos-agent.*index.ts --role\" 2>/dev/null || true; for p in 3000 8080 8081; do ids=$(lsof -tiTCP:$p -sTCP:LISTEN 2>/dev/null); if [ -n \"$ids\" ]; then kill $ids; fi; done'",
+    "proof:demo:prewarm": "npm --prefix agents/elizaos-agent run proof:demo:prewarm",
+    "proof:demo": "npm --prefix agents/elizaos-agent run proof:demo",
+    "proof:demo:run": "npm run proof:demo:prewarm && npm run proof:demo",
+    "proof:demo:raw": "npm --prefix agents/elizaos-agent run proof:demo:raw",
+    "proof:per": "npm --prefix agents/elizaos-agent run proof:per",
+    "agent:normal": "node scripts/manus-local-sdk-agent.cjs normal-two-agent",
+    "agent:normal:preflight": "node scripts/manus-local-sdk-agent.cjs normal-preflight",
+    "agent:normal:dry": "node scripts/manus-local-sdk-agent.cjs normal-dry-run",
+    "agent:normal:post": "node scripts/manus-local-sdk-agent.cjs normal-post",
+    "agent:normal:join": "node scripts/manus-local-sdk-agent.cjs normal-join"
   },
   "dependencies": {
-    "framer-motion": "^12.38.0",
-    "lucide-react": "^0.511.0",
-    "next": "16.2.10",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
-  },
-  "overrides": {
-    "postcss": "8.5.17"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.10",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "snarkjs": "^0.7.6"
   }
 }
