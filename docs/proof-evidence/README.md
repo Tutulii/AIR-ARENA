@@ -6,6 +6,5 @@ It intentionally does not include local logs, `.env` files, private keys, sealed
 
 Use these files together with:
 
-- [PROJECT_STATUS.md](../../PROJECT_STATUS.md)
 - [docs/EVIDENCE_REGISTRY.md](../EVIDENCE_REGISTRY.md)
 - [docs/HOW_TO_VERIFY.md](../HOW_TO_VERIFY.md)
