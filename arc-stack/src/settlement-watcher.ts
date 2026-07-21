@@ -165,13 +165,15 @@ export async function runResultWatcher(
 ): Promise<void> {
   const lockClient = await db.connect();
   try {
-    const lock = await lockClient.query<{ acquired: boolean }>(
-      "SELECT pg_try_advisory_lock(hashtext('airarena_arc_result_watcher')) AS acquired",
-    );
-    if (!lock.rows[0]?.acquired) {
-      logger.info("arc_result_watcher_leadership_not_acquired");
-      return;
+    while (!state.stopping) {
+      const lock = await lockClient.query<{ acquired: boolean }>(
+        "SELECT pg_try_advisory_lock(hashtext('airarena_arc_result_watcher')) AS acquired",
+      );
+      if (lock.rows[0]?.acquired) break;
+      logger.info("arc_result_watcher_waiting_for_leadership");
+      await new Promise((resolve) => setTimeout(resolve, Math.max(1_000, config.resultPollIntervalMs)));
     }
+    if (state.stopping) return;
     state.resultWatcherLeader = true;
     metrics.resultWatcherLeader.set(1);
     logger.info({ intervalMs: config.resultPollIntervalMs }, "arc_result_watcher_started");
