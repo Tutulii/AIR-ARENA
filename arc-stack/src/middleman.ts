@@ -517,11 +517,13 @@ async function runIndexer(
   if (!config.exchangeAddress) throw new Error("exchange_not_configured");
   const lockClient = await db.connect();
   try {
-    const lock = await lockClient.query<{ acquired: boolean }>("SELECT pg_try_advisory_lock(5042002) AS acquired");
-    if (!lock.rows[0]?.acquired) {
-      logger.info("arc_indexer_leadership_not_acquired");
-      return;
+    while (!state.stopping) {
+      const lock = await lockClient.query<{ acquired: boolean }>("SELECT pg_try_advisory_lock(5042002) AS acquired");
+      if (lock.rows[0]?.acquired) break;
+      logger.info("arc_indexer_waiting_for_leadership");
+      await new Promise((resolve) => setTimeout(resolve, Math.max(1_000, config.indexerPollIntervalMs)));
     }
+    if (state.stopping) return;
     state.indexerLeader = true;
     const publicClient = createArcPublicClient(config);
     while (!state.stopping) {
