@@ -1,0 +1,54 @@
+name: Arc Stack CI
+
+on:
+  pull_request:
+    paths:
+      - "arc-stack/**"
+      - ".github/workflows/arc-stack-ci.yml"
+  push:
+    paths:
+      - "arc-stack/**"
+      - ".github/workflows/arc-stack-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arc-stack-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: arc-stack
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: npm
+          cache-dependency-path: arc-stack/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm audit
+      - run: docker build -t airarena-arc-stack:${{ github.sha }} .
+
+  contracts:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: arc-stack/contracts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+      - run: forge install OpenZeppelin/openzeppelin-contracts@v5.4.0 --no-git
+      - run: forge install foundry-rs/forge-std@v1.11.0 --no-git
+      - run: forge fmt --check
+      - run: forge test -vv
+      - run: forge build --sizes
