@@ -16,4 +16,6 @@ RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY --from=build --chown=airarena:airarena /app/dist ./dist
 USER airarena
 EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD ["node", "-e", "fetch('http://127.0.0.1:3000/health/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
 CMD ["node", "dist/entrypoint.js"]
